@@ -49,17 +49,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
             except KeyError:
                 self.send_response(404)
                 self.send_header('Content-type', 'text/json')
-                get_response = bytes(f'{{\n  "error": "Unable to find message"\n"message_sha256": "{hashed_message}"\n}}\n', "utf8")
-                self.wfile.write(get_response)
                 self.end_headers()
+                get_response = bytes(f'{{\n  "error": "Unable to find message"\n  "message_sha256": "{hashed_message}"\n}}\n', "utf8")
+                self.wfile.write(get_response)
+
                 return
 
             print("message found.")
             self.send_response(200)
             self.send_header('Content-type', 'text/json')
+            self.end_headers()
             body = bytes(f'{{\n  "message": "{message}"\n}}\n', "utf8")
             self.wfile.write(body)
-            self.end_headers()
+
         elif self.path == '/metrics':
             pass
         else:
