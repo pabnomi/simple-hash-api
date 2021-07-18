@@ -8,7 +8,7 @@ on:
 
 jobs:
   linter:
-    name: Run linter
+    name: Linter
     runs-on: ubuntu-latest
 
     steps:
@@ -31,6 +31,7 @@ jobs:
   fake_deploy_cache_multi:
     needs: linter
     runs-on: ubuntu-latest
+    name: Deploy
     steps:
       - uses: actions/checkout@v2
 
@@ -79,4 +80,5 @@ jobs:
         run: |
           docker run --rm -d --name hash-api-ci-test -p 8080:8080 ${{ steps.prep.outputs.tagged_image }}
           docker run --link hash-api-ci-test:hash-api-ci-test waisbrot/wait
-          curl --fail http://localhost:8080/users
+          curl --fail -X POST -H 'Content-Type: text/json' -d '{ "message": "hola" }' localhost:8080/messages
+          curl --fail localhost:8080/messages/b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79

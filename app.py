@@ -41,7 +41,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 self.send_response(404)
                 self.send_header('Content-type', 'text/json')
                 self.end_headers()
-                get_response = bytes(f'{{\n  "error": "Unable to find message"\n  "message_sha256": "{hashed_message}"\n}}\n', "utf8")
+                get_response = bytes(f'{{\n  "error": "Unable to find message"\n  "message_sha256": "{hashed_message}"'
+                                     f'\n}}\n', "utf8")
                 self.wfile.write(get_response)
                 return
 
