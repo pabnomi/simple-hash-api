@@ -1,8 +1,3 @@
-#TODO basic HTTP listener
-#TODO messages endpoint
-#TODO Hash function
-#TODO Testing
-import cgi
 import http.server
 import hashlib
 import cgitb
@@ -20,6 +15,7 @@ def hash_message(string):
 
 class LocalData(object):
     messages = {}
+    stats = {}
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -28,10 +24,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         content_type = self.headers.get_content_type()
         if content_type == 'text/json':
             length = int(self.headers['content-length'])
-            raw = self.rfile.read(length)
-            data = json.loads(raw)
+            raw_data = self.rfile.read(length)
+            data = json.loads(raw_data)
             message = data['message']
-            # TODO Error condition
             if not message:
                 self.send_response(404)
                 self.end_headers()
@@ -41,25 +36,21 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         if re.search('/messages/([0-9]+|[a-f]+|[A-F]+)', self.path) is not None:
-            # search for the message
             hashed_message = self.path.split('/')[-1]
-
-            try:
-                message = LocalData.messages[hashed_message]
-            except KeyError:
+            if hashed_message not in LocalData.messages:
                 self.send_response(404)
                 self.send_header('Content-type', 'text/json')
                 self.end_headers()
                 get_response = bytes(f'{{\n  "error": "Unable to find message"\n  "message_sha256": "{hashed_message}"\n}}\n', "utf8")
                 self.wfile.write(get_response)
-
                 return
 
-            print("message found.")
+            decoded_message = LocalData.messages[hashed_message]
+            print(f"message '{decoded_message}' found.")
             self.send_response(200)
             self.send_header('Content-type', 'text/json')
             self.end_headers()
-            body = bytes(f'{{\n  "message": "{message}"\n}}\n', "utf8")
+            body = bytes(f'{{\n  "message": "{decoded_message}"\n}}\n', "utf8")
             self.wfile.write(body)
 
         elif self.path == '/metrics':
@@ -76,7 +67,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             if message:
                 hashed = hash_message(message)
                 LocalData.messages[hashed] = message
-                print(f"message saved successfully as: {hashed}")
+                print(f"message saved successfully as {hashed}")
                 self.send_response(200)
                 self.end_headers()
                 post_response = bytes(f'{{\n  "digest": "{hashed}"\n}}\n', "utf8")
@@ -88,5 +79,5 @@ class Handler(http.server.BaseHTTPRequestHandler):
         return
 
 
-httpd = http.server.HTTPServer(('127.0.0.1', 8080), Handler)
+httpd = http.server.HTTPServer(('0.0.0.0', 8080), Handler)
 httpd.serve_forever()
