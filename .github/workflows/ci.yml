@@ -20,13 +20,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install python dependencies
-        run: pip install flake8
-
-      - name: Run flake8
-        uses: wearerequired/lint-action@v1
-        with:
-          flake8: true
+      - name: Lint with flake8
+        run: |
+          sudo pip3 install flake8
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
   fake_deploy_cache_multi:
     needs: linter
@@ -39,7 +39,7 @@ jobs:
         id: prep
         run: |
           TAG=$(echo $GITHUB_SHA | head -c7)
-          IMAGE="hub.docker.com/imlucio/flask-container-ci"
+          IMAGE="hub.docker.com/imlucio/hash-api"
           echo ::set-output name=tagged_image::${IMAGE}:${TAG}
           echo ::set-output name=tag::${TAG}
       - name: Set up Docker Buildx
