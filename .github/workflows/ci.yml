@@ -16,7 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.8
 
       - name: Lint with flake8
         run: |
@@ -29,7 +29,7 @@ jobs:
   fake_deploy_cache_multi:
     needs: linter
     runs-on: ubuntu-latest
-    name: Deploy
+    name: Build
     env:
       TEST_CONTAINER: hash-api-ci-test
     if:
@@ -82,5 +82,5 @@ jobs:
         run: |
           docker run --rm -d --name ${TEST_CONTAINER} -p 8080:8080 ${{ steps.prep.outputs.tagged_image }}
           docker run --link ${TEST_CONTAINER}:${TEST_CONTAINER} waisbrot/wait
-          curl --fail -X POST -H 'Content-Type: text/json' -d '{ "message": "hola" }' localhost:8080/messages
-          curl --fail localhost:8080/messages/b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79
+          curl --silent --fail -X POST -H 'Content-Type: text/json' -d '{ "message": "hola" }' localhost:8080/messages
+          echo ::set-output name=MESSAGE_RESULT::$(curl --silent --fail localhost:8080/messages/b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79)
