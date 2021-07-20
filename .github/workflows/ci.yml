@@ -1,6 +1,7 @@
 name: Fake deploy with multi-stage Dockerfile
 on:
   workflow_dispatch:
+  pull_request:
   push:
 
 jobs:
