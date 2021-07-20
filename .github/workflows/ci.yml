@@ -1,10 +1,7 @@
 name: Fake deploy with multi-stage Dockerfile
 on:
   workflow_dispatch:
-  pull_request:
   push:
-    branches:
-      - main
 
 jobs:
   linter:
@@ -32,6 +29,10 @@ jobs:
     needs: linter
     runs-on: ubuntu-latest
     name: Deploy
+    env:
+      TEST_CONTAINER: hash-api-ci-test
+    if:
+      ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v2
 
@@ -39,7 +40,7 @@ jobs:
         id: prep
         run: |
           TAG=$(echo $GITHUB_SHA | head -c7)
-          IMAGE="hub.docker.com/imlucio/hash-api"
+          IMAGE="hub.docker.com/pabnomi/hash-api"
           echo ::set-output name=tagged_image::${IMAGE}:${TAG}
           echo ::set-output name=tag::${TAG}
       - name: Set up Docker Buildx
@@ -78,7 +79,7 @@ jobs:
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - name: Quick testing
         run: |
-          docker run --rm -d --name hash-api-ci-test -p 8080:8080 ${{ steps.prep.outputs.tagged_image }}
-          docker run --link hash-api-ci-test:hash-api-ci-test waisbrot/wait
+          docker run --rm -d --name ${TEST_CONTAINER} -p 8080:8080 ${{ steps.prep.outputs.tagged_image }}
+          docker run --link ${TEST_CONTAINER}:${TEST_CONTAINER} waisbrot/wait
           curl --fail -X POST -H 'Content-Type: text/json' -d '{ "message": "hola" }' localhost:8080/messages
           curl --fail localhost:8080/messages/b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79
