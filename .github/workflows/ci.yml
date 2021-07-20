@@ -82,5 +82,7 @@ jobs:
         run: |
           docker run --rm -d --name ${TEST_CONTAINER} -p 8080:8080 ${{ steps.prep.outputs.tagged_image }}
           docker run --link ${TEST_CONTAINER}:${TEST_CONTAINER} waisbrot/wait
+          echo "Sending message 'hola' to process..."
           curl --silent --fail -X POST -H 'Content-Type: text/json' -d '{ "message": "hola" }' localhost:8080/messages
           echo ::set-output name=MESSAGE_RESULT::$(curl --silent --fail localhost:8080/messages/b221d9dbb083a7f33428d7c2a3c3198ae925614d70210e28716ccaa7cd4ddb79)
+          echo ${MESSAGE_RESULT}
